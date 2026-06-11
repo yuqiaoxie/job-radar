@@ -145,7 +145,7 @@ def score_job(job: dict[str, str], profile: dict) -> dict[str, str]:
     seniority_weight = int(scoring.get("good_seniority", 15))
     internship_weight = int(scoring.get("internship_fit", 10))
     warning_penalty = int(scoring.get("warning_keyword_penalty", 18))
-    minimum_score_to_export = int(profile.get("minimum_score_to_export", 60))
+    minimum_score_to_export = int(profile.get("minimum_score_to_export", 37))
 
     target_roles = normalize_terms(profile.get("target_roles", []))
     keyword_config = profile.get("target_keywords", {})
