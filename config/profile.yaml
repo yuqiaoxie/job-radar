@@ -1,5 +1,7 @@
 profile_name: neuroscience_master_switzerland_business_internships
 
+minimum_score_to_export: 
+
 summary:
   background: neuroscience master student in Switzerland
   target_level: internship, intern, working student, junior, associate
@@ -123,8 +125,15 @@ good_seniority_keywords:
 warning_keywords:
   - senior
   - lead
-  - analyst
   - data analyst
+  - data engineer
+  - machine learning engineer
+  - deep learning engineer
+  - ai engineer
+  - ai developer
+  - ai researcher
+  - ai scientist
+  - ai engineer
   - principal
   - head of
   - director
@@ -153,7 +162,10 @@ warning_keywords:
   - backend engineer
   - frontend engineer
   - full stack engineer
-  - devops
+  - engineer
+  - data science
+  - IT support
+  - data analyst
   - data engineer
   - machine learning engineer
   - accountant

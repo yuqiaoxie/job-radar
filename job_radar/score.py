@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import re
 from pathlib import Path
 
 import yaml
@@ -22,8 +23,24 @@ OUTPUT_COLUMNS = [
     "matched_keywords",
     "warning_keywords",
     "short_reason",
+    "hard_filter_status",
+    "hard_filter_reason",
+    "hard_filter_category",
+    "minimum_score_to_export",
 ]
 
+CAREER_LEVEL_PATTERNS = (
+    ("intern", r"\bintern\b"),
+    ("internship", r"\binternship\b"),
+    ("trainee", r"\btrainee\b"),
+    ("graduate", r"\bgraduate\b"),
+    ("entry level", r"\bentry[- ]level\b"),
+    ("junior", r"\bjunior\b"),
+    ("working student", r"\bworking\s+student\b"),
+    ("student job", r"\bstudent\s+job\b"),
+    ("early career", r"\bearly\s+career\b"),
+    ("early careers", r"\bearly\s+careers\b"),
+)
 
 def load_profile(path: Path = PROFILE_PATH) -> dict:
     with path.open("r", encoding="utf-8") as file:
@@ -46,6 +63,79 @@ def find_matches(text: str, terms: list[str]) -> list[str]:
     return [term for term in terms if term in lowered]
 
 
+def regex_matches(text: str, patterns: tuple[tuple[str, str], ...]) -> list[str]:
+    matches = []
+    for label, pattern in patterns:
+        if re.search(pattern, text, flags=re.IGNORECASE):
+            matches.append(label)
+    return list(dict.fromkeys(matches))
+
+
+def keyword_to_pattern(keyword: str) -> str:
+    escaped = re.escape(keyword.strip())
+    escaped = escaped.replace(r"\ ", r"[\s-]+")
+    if keyword[:1].isalnum():
+        escaped = r"\b" + escaped
+    if keyword[-1:].isalnum():
+        escaped = escaped + r"\b"
+    return escaped
+
+
+def flatten_negative_keywords(value: object, prefix: str = "negative_keywords") -> list[tuple[str, str]]:
+    flattened = []
+    if isinstance(value, dict):
+        for key, nested_value in value.items():
+            flattened.extend(flatten_negative_keywords(nested_value, f"{prefix}.{key}"))
+    elif isinstance(value, list):
+        for item in value:
+            keyword = str(item).strip()
+            if keyword:
+                flattened.append((keyword, prefix))
+    return flattened
+
+
+def build_exclusion_patterns(profile: dict) -> list[tuple[str, str, str]]:
+    patterns = []
+
+    for keyword in normalize_terms(profile.get("warning_keywords", [])):
+        patterns.append((keyword, "warning_keywords", keyword_to_pattern(keyword)))
+
+    for keyword, category in flatten_negative_keywords(profile.get("negative_keywords", {})):
+        normalized_keyword = keyword.lower()
+        patterns.append((normalized_keyword, category, keyword_to_pattern(normalized_keyword)))
+
+    deduped = {}
+    for keyword, category, pattern in patterns:
+        deduped.setdefault((keyword, category), pattern)
+    return [(keyword, category, pattern) for (keyword, category), pattern in deduped.items()]
+
+
+def find_exclusion_matches(text: str, patterns: list[tuple[str, str, str]]) -> list[tuple[str, str]]:
+    matches = []
+    for keyword, category, pattern in patterns:
+        if re.search(pattern, text, flags=re.IGNORECASE):
+            matches.append((keyword, category))
+    return list(dict.fromkeys(matches))
+
+
+def hard_filter_job(searchable_text: str, exclusion_patterns: list[tuple[str, str, str]]) -> tuple[str, str, str]:
+    exclusion_matches = find_exclusion_matches(searchable_text, exclusion_patterns)
+    if exclusion_matches:
+        keywords = [keyword for keyword, _category in exclusion_matches]
+        categories = [category for _keyword, category in exclusion_matches]
+        return (
+            "exclude",
+            "matched exclusion keyword: " + ", ".join(keywords),
+            ", ".join(dict.fromkeys(categories)),
+        )
+
+    career_matches = regex_matches(searchable_text, CAREER_LEVEL_PATTERNS)
+    if career_matches:
+        return "keep", "career-level keyword: " + ", ".join(career_matches), "career_level"
+
+    return "exclude", "missing early-career keyword", "career_level"
+
+
 def score_job(job: dict[str, str], profile: dict) -> dict[str, str]:
     scoring = profile.get("scoring", {})
     role_weight = int(scoring.get("role_match", 30))
@@ -55,6 +145,7 @@ def score_job(job: dict[str, str], profile: dict) -> dict[str, str]:
     seniority_weight = int(scoring.get("good_seniority", 15))
     internship_weight = int(scoring.get("internship_fit", 10))
     warning_penalty = int(scoring.get("warning_keyword_penalty", 18))
+    minimum_score_to_export = int(profile.get("minimum_score_to_export", 60))
 
     target_roles = normalize_terms(profile.get("target_roles", []))
     keyword_config = profile.get("target_keywords", {})
@@ -80,6 +171,11 @@ def score_job(job: dict[str, str], profile: dict) -> dict[str, str]:
     location_matches = find_matches(searchable_text, target_locations)
     seniority_matches = find_matches(searchable_text, good_seniority)
     warnings = find_matches(searchable_text, warning_terms)
+    exclusion_patterns = build_exclusion_patterns(profile)
+    hard_filter_status, hard_filter_reason, hard_filter_category = hard_filter_job(
+        searchable_text,
+        exclusion_patterns,
+    )
 
     score = 0
     score += role_weight if role_matches else 0
@@ -117,6 +213,10 @@ def score_job(job: dict[str, str], profile: dict) -> dict[str, str]:
             "matched_keywords": ", ".join(matched_keywords),
             "warning_keywords": ", ".join(sorted(set(warnings))),
             "short_reason": "; ".join(reasons),
+            "hard_filter_status": hard_filter_status,
+            "hard_filter_reason": hard_filter_reason,
+            "hard_filter_category": hard_filter_category,
+            "minimum_score_to_export": str(minimum_score_to_export),
         }
     )
     return scored
@@ -144,4 +244,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

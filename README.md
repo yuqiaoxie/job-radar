@@ -73,6 +73,8 @@ This creates:
 - `data/jobs_scored.csv`
 - `daily_jobs.xlsx`
 
+`data/jobs_collected.csv` contains all collected jobs. `data/jobs_scored.csv` keeps all scored jobs and adds `hard_filter_status`, `hard_filter_reason`, `hard_filter_category`, and `minimum_score_to_export`. `daily_jobs.xlsx` only includes rows where `hard_filter_status` is `keep` and `score` is greater than `minimum_score_to_export`.
+
 ## Run Individual Steps
 
 Collect links:
@@ -107,6 +109,14 @@ The Excel file includes:
 - `matched_keywords`
 - `warning_keywords`
 - `short_reason`
+
+## Hard Filter
+
+Before export, job-radar applies a hard filter for early-career suitability. A job is kept only when its available text includes an early-career signal such as `intern`, `internship`, `trainee`, `graduate`, `entry level`, `junior`, `working student`, `student job`, or `early career`.
+
+All `warning_keywords` and all nested `negative_keywords` in `config/profile.yaml` are hard exclusion filters. This includes mismatch categories such as `role_mismatch` and `contract_mismatch`. If a job matches any exclusion keyword, it is excluded from `daily_jobs.xlsx` even when its score is high.
+
+The Excel report also applies a score threshold. By default, only jobs with `score > 60` are exported. You can change this with `minimum_score_to_export` in `config/profile.yaml`.
 
 ## Notes
 

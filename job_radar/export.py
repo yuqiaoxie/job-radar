@@ -34,7 +34,16 @@ def read_scored_jobs(path: Path = INPUT_PATH) -> list[dict[str, str]]:
 
 
 def export_excel() -> Path:
-    jobs = read_scored_jobs()
+    scored_jobs = read_scored_jobs()
+    jobs = []
+    for job in scored_jobs:
+        try:
+            score = int(job.get("score", "0"))
+            minimum_score = int(job.get("minimum_score_to_export", "60"))
+        except ValueError:
+            continue
+        if job.get("hard_filter_status", "").strip().lower() == "keep" and score > minimum_score:
+            jobs.append(job)
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Daily Jobs"
