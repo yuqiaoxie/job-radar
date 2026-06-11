@@ -1,0 +1,106 @@
+profile_name: neuroscience_master_business_roles
+
+target_roles:
+  - business development
+  - growth marketing
+  - product marketing
+  - strategy
+  - life science business
+  - healthcare
+  - biotech
+  - medtech
+  - deep tech
+  - startup
+
+target_keywords:
+  high_priority:
+    - business development
+    - growth
+    - marketing
+    - product marketing
+    - go-to-market
+    - strategy
+    - commercial
+    - partnerships
+    - life science
+    - healthcare
+    - biotech
+    - medtech
+    - diagnostics
+    - digital health
+    - neuroscience
+    - startup
+    - deep tech
+  medium_priority:
+    - market research
+    - competitive intelligence
+    - venture
+    - innovation
+    - customer discovery
+    - sales
+    - operations
+    - associate
+    - analyst
+    - trainee
+    - graduate
+    - junior
+    - internship
+    - intern
+
+target_locations:
+  - switzerland
+  - zurich
+  - zurich
+  - basel
+  - geneva
+  - lausanne
+  - bern
+  - germany
+  - berlin
+  - munich
+  - hamburg
+  - netherlands
+  - amsterdam
+  - france
+  - paris
+  - spain
+  - barcelona
+  - madrid
+  - remote europe
+  - remote
+  - europe
+
+good_seniority_keywords:
+  - intern
+  - internship
+  - trainee
+  - graduate
+  - junior
+  - associate
+  - entry level
+  - working student
+
+warning_keywords:
+  - senior
+  - lead
+  - principal
+  - head of
+  - director
+  - vp
+  - vice president
+  - manager
+  - 5+ years
+  - 7+ years
+  - 10+ years
+  - phd required
+  - medical doctor
+
+scoring:
+  role_match: 30
+  high_priority_keyword: 8
+  medium_priority_keyword: 4
+  location_match: 18
+  good_seniority: 15
+  internship_fit: 10
+  warning_keyword_penalty: 18
+

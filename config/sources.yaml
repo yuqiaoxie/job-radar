@@ -1,0 +1,48 @@
+# Public job board URLs for the first version of job-radar.
+# Keep LinkedIn out of this file.
+#
+# Format:
+# - name: Human-readable source name
+# - type: job_board or company
+# - url: Public page to collect links from
+# - company: Optional fixed company name; leave empty for job boards
+# - enabled: true means the pipeline will read this source
+
+sources:
+  - name: jobs.ch Business Development Switzerland
+    type: job_board
+    url: https://www.jobs.ch/en/vacancies/?term=business%20development&location=Switzerland
+    company: ""
+    enabled: true
+
+  - name: jobup.ch Marketing Switzerland
+    type: job_board
+    url: https://www.jobup.ch/en/jobs/?term=marketing&location=Switzerland
+    company: ""
+    enabled: true
+
+  - name: Arbeitnow Marketing Germany
+    type: job_board
+    url: https://www.arbeitnow.com/jobs/marketing
+    company: ""
+    enabled: true
+
+  - name: IamExpat Jobs Netherlands
+    type: job_board
+    url: https://www.iamexpat.nl/career/jobs-netherlands
+    company: ""
+    enabled: true
+
+  - name: Welcome to the Jungle Marketing Europe
+    type: job_board
+    url: https://www.welcometothejungle.com/en/jobs?query=marketing
+    company: ""
+    # Disabled after testing: search results are not exposed as plain HTML job links.
+    enabled: false
+
+  - name: Startup.jobs Marketing Europe
+    type: job_board
+    url: https://startup.jobs/?q=marketing
+    company: ""
+    # Disabled after testing: returns HTTP 403 to the simple HTML collector.
+    enabled: false
