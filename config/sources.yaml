@@ -1,48 +1,114 @@
-# Public job board URLs for the first version of job-radar.
-# Keep LinkedIn out of this file.
+# Public job sources for job-radar.
+# LinkedIn is intentionally not scraped. The LinkedIn entry below is a disabled
+# email-alert placeholder for future manual/email parsing work.
 #
 # Format:
+# - group: Region or source group
 # - name: Human-readable source name
-# - type: job_board or company
+# - type: job_board, startup_board, or email_alert
 # - url: Public page to collect links from
 # - company: Optional fixed company name; leave empty for job boards
 # - enabled: true means the pipeline will read this source
+# - notes: Editing/testing notes
 
 sources:
-  - name: jobs.ch Business Development Switzerland
+  # Switzerland
+  - group: Switzerland
+    name: jobs.ch Business Development Switzerland
     type: job_board
     url: https://www.jobs.ch/en/vacancies/?term=business%20development&location=Switzerland
     company: ""
     enabled: true
+    notes: Stable public HTML listing; source-specific parser enabled.
 
-  - name: jobup.ch Marketing Switzerland
+  - group: Switzerland
+    name: jobup.ch Marketing Switzerland
     type: job_board
     url: https://www.jobup.ch/en/jobs/?term=marketing&location=Switzerland
     company: ""
     enabled: true
+    notes: Stable public HTML listing; source-specific parser enabled.
 
-  - name: Arbeitnow Marketing Germany
+  - group: Switzerland
+    name: Jobs in Geneva
     type: job_board
-    url: https://www.arbeitnow.com/jobs/marketing
+    url: https://www.jobsingeneva.com/
     company: ""
-    enabled: true
+    enabled: false
+    notes: Disabled for now until the collector has a source-specific parser.
 
-  - name: IamExpat Jobs Netherlands
+  - group: Switzerland
+    name: Jobs in Zurich
+    type: job_board
+    url: https://www.jobsinzurich.com/
+    company: ""
+    enabled: false
+    notes: Disabled for now until the collector has a source-specific parser.
+
+  # Netherlands
+  - group: Netherlands
+    name: IamExpat Jobs Netherlands
     type: job_board
     url: https://www.iamexpat.nl/career/jobs-netherlands
     company: ""
     enabled: true
+    notes: Stable public HTML listing; company is not exposed reliably on listing pages.
 
-  - name: Welcome to the Jungle Marketing Europe
+  - group: Netherlands
+    name: Undutchables
     type: job_board
+    url: https://undutchables.nl/jobs
+    company: ""
+    enabled: false
+    notes: Disabled for now until parsing quality is tested.
+
+  # Germany
+  - group: Germany
+    name: Arbeitnow Marketing Germany
+    type: job_board
+    url: https://www.arbeitnow.com/jobs/marketing
+    company: ""
+    enabled: true
+    notes: Stable public HTML listing; source-specific parser enabled.
+
+  - group: Germany
+    name: Berlin Startup Jobs
+    type: startup_board
+    url: https://berlinstartupjobs.com/marketing/
+    company: ""
+    enabled: false
+    notes: Disabled for now to avoid noisy generic parsing.
+
+  # Europe startup
+  - group: Europe startup
+    name: Welcome to the Jungle Marketing Europe
+    type: startup_board
     url: https://www.welcometothejungle.com/en/jobs?query=marketing
     company: ""
-    # Disabled after testing: search results are not exposed as plain HTML job links.
     enabled: false
+    notes: Disabled after testing; search results are JavaScript-heavy and not exposed as clean public HTML job links.
 
-  - name: Startup.jobs Marketing Europe
-    type: job_board
+  - group: Europe startup
+    name: Wellfound Europe Marketing
+    type: startup_board
+    url: https://wellfound.com/role/l/europe/marketing
+    company: ""
+    enabled: false
+    notes: Disabled; JavaScript-heavy and not suitable for the simple public HTML collector.
+
+  - group: Europe startup
+    name: Startup.jobs Marketing Europe
+    type: startup_board
     url: https://startup.jobs/?q=marketing
     company: ""
-    # Disabled after testing: returns HTTP 403 to the simple HTML collector.
     enabled: false
+    notes: Disabled after testing; returns HTTP 403 to the simple HTML collector.
+
+  # Alerts
+  - group: Alerts
+    name: LinkedIn job alert emails
+    type: email_alert
+    url: ""
+    company: ""
+    enabled: false
+    notes: Placeholder only. Do not scrape LinkedIn directly.

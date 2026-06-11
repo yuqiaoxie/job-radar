@@ -1,40 +1,58 @@
-profile_name: neuroscience_master_business_roles
+profile_name: neuroscience_master_switzerland_business_internships
+
+summary:
+  background: neuroscience master student in Switzerland
+  target_level: internship, intern, working student, junior, associate
+  target_direction: business, growth, product marketing, strategy, life science, healthcare, biotech, medtech, deep tech, startups
 
 target_roles:
   - business development
   - growth marketing
   - product marketing
   - strategy
+  - founder associate
+  - venture building
   - life science business
-  - healthcare
+  - healthcare business
   - biotech
   - medtech
   - deep tech
   - startup
+  - commercial
+  - market research
 
 target_keywords:
   high_priority:
     - business development
-    - growth
-    - marketing
+    - growth marketing
     - product marketing
     - go-to-market
     - strategy
+    - founder associate intern
+    - venture building
     - commercial
+    - commercial strategy
     - partnerships
+    - market research
     - life science
+    - healthcare business
     - healthcare
     - biotech
     - medtech
-    - diagnostics
-    - digital health
     - neuroscience
     - startup
     - deep tech
+    - intern
+    - internship
+    - chinese
+    - mandarin
+    - chinese speaking
+    - mandarin speaking
+    - english speaking
   medium_priority:
-    - market research
-    - competitive intelligence
-    - venture
+    - growth
+    - marketing
+    - product
     - innovation
     - customer discovery
     - sales
@@ -43,24 +61,34 @@ target_keywords:
     - analyst
     - trainee
     - graduate
-    - junior
-    - internship
-    - intern
+    - working student
+    - international
+    - any major
+    - all majors
+    - degree discipline open
+    - major not limited
 
 target_locations:
   - switzerland
   - zurich
-  - zurich
+  - zurich area
   - basel
   - geneva
   - lausanne
   - bern
+  - zug
+  - st. gallen
   - germany
   - berlin
   - munich
   - hamburg
+  - frankfurt
+  - dusseldorf
   - netherlands
   - amsterdam
+  - rotterdam
+  - utrecht
+  - eindhoven
   - france
   - paris
   - spain
@@ -69,6 +97,16 @@ target_locations:
   - remote europe
   - remote
   - europe
+
+preferred_contract_types:
+  - internship
+  - trainee
+  - working student
+  - junior
+  - associate
+  - graduate program
+  - part-time
+  - fixed-term
 
 good_seniority_keywords:
   - intern
@@ -79,10 +117,14 @@ good_seniority_keywords:
   - associate
   - entry level
   - working student
+  - werkstudent
+  - praktikum
 
 warning_keywords:
   - senior
   - lead
+  - analyst
+  - data analyst
   - principal
   - head of
   - director
@@ -94,6 +136,67 @@ warning_keywords:
   - 10+ years
   - phd required
   - medical doctor
+  - native german
+  - fluent german
+  - german native
+  - german fluency
+  - native dutch
+  - fluent dutch
+  - dutch native
+  - dutch fluency
+  - native french
+  - fluent french
+  - french native
+  - french fluency
+  - software engineer
+  - software developer
+  - backend engineer
+  - frontend engineer
+  - full stack engineer
+  - devops
+  - data engineer
+  - machine learning engineer
+  - accountant
+  - accounting
+  - audit
+  - permanent full-time
+  - permanent position
+  - full-time permanent
+
+negative_keywords:
+  seniority:
+    - senior
+    - lead
+    - principal
+    - head of
+    - director
+    - vp
+    - vice president
+    - 5+ years
+    - 7+ years
+    - 10+ years
+  language_requirements:
+    - native german
+    - fluent german
+    - native dutch
+    - fluent dutch
+    - native french
+    - fluent french
+  role_mismatch:
+    - software engineer
+    - software developer
+    - backend engineer
+    - frontend engineer
+    - full stack engineer
+    - devops
+    - analyst
+    - accountant
+    - accounting
+    - audit
+  contract_mismatch:
+    - permanent full-time
+    - permanent position
+    - full-time permanent
 
 scoring:
   role_match: 30
@@ -103,4 +206,3 @@ scoring:
   good_seniority: 15
   internship_fit: 10
   warning_keyword_penalty: 18
-
