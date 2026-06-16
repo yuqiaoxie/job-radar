@@ -35,9 +35,10 @@ GENERIC_LINK_TEXT = {
 }
 
 
-def mail_settings() -> tuple[str, int, str, str] | None:
+def mail_settings() -> tuple[str, int, str, str, str] | None:
     host = os.getenv("MAIL_IMAP_HOST", "imap.163.com").strip()
     port_text = os.getenv("MAIL_IMAP_PORT", "993").strip()
+    mailbox_name = os.getenv("MAILBOX_NAME", "INBOX").strip() or "INBOX"
     username = os.getenv("MAIL_USERNAME", "").strip()
     password = os.getenv("MAIL_PASSWORD", "").strip()
 
@@ -51,7 +52,7 @@ def mail_settings() -> tuple[str, int, str, str] | None:
         print("Warning: MAIL_IMAP_PORT must be a number; skipping email alert collection.")
         return None
 
-    return host, port, username, password
+    return host, port, mailbox_name, username, password
 
 
 def decode_subject(value: str | None) -> str:
@@ -251,14 +252,21 @@ def collect_email_alert_jobs() -> list[dict[str, str]]:
     if settings is None:
         return []
 
-    host, port, username, password = settings
+    host, port, mailbox_name, username, password = settings
     since = (datetime.now() - timedelta(days=RECENT_DAYS)).strftime("%d-%b-%Y")
     collected = []
 
     try:
         with imaplib.IMAP4_SSL(host, port) as mailbox:
             mailbox.login(username, password)
-            mailbox.select("INBOX")
+            status, _data = mailbox.select(mailbox_name)
+            if status != "OK":
+                print(
+                    "Warning: could not select IMAP mailbox "
+                    f"'{mailbox_name}'; skipping email alert collection."
+                )
+                return []
+
             status, data = mailbox.search(None, f'(SINCE "{since}")')
             if status != "OK":
                 print("Warning: IMAP search failed; skipping email alert collection.")

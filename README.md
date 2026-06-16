@@ -173,6 +173,7 @@ Local PowerShell setup:
 ```powershell
 $env:MAIL_IMAP_HOST="imap.163.com"
 $env:MAIL_IMAP_PORT="993"
+$env:MAILBOX_NAME="INBOX"
 $env:MAIL_USERNAME="your_email@163.com"
 $env:MAIL_PASSWORD="your_163_authorization_code"
 ```
@@ -181,6 +182,7 @@ On GitHub Actions, add these repository secrets:
 
 - `MAIL_IMAP_HOST` optional; defaults to `imap.163.com`
 - `MAIL_IMAP_PORT` optional; defaults to `993`
+- `MAILBOX_NAME` optional; defaults to `INBOX`
 - `MAIL_USERNAME`
 - `MAIL_PASSWORD`
 
