@@ -3,7 +3,6 @@ from __future__ import annotations
 import imaplib
 import os
 import re
-from base64 import b64encode
 from datetime import datetime, timedelta
 from email import message_from_bytes
 from email.header import decode_header
@@ -37,11 +36,9 @@ GENERIC_LINK_TEXT = {
 }
 
 
-def mail_settings() -> tuple[str, int, list[str], str, str] | None:
+def mail_settings() -> tuple[str, int, str, str] | None:
     host = os.getenv("MAIL_IMAP_HOST", "imap.163.com").strip()
     port_text = os.getenv("MAIL_IMAP_PORT", "993").strip()
-    mailbox_name = os.getenv("MAILBOX_NAME", "").strip()
-    mailbox_candidates = [mailbox_name] if mailbox_name else DEFAULT_MAILBOX_CANDIDATES
     username = os.getenv("MAIL_USERNAME", "").strip()
     password = os.getenv("MAIL_PASSWORD", "").strip()
 
@@ -55,7 +52,7 @@ def mail_settings() -> tuple[str, int, list[str], str, str] | None:
         print("Warning: MAIL_IMAP_PORT must be a number; skipping email alert collection.")
         return None
 
-    return host, port, mailbox_candidates, username, password
+    return host, port, username, password
 
 
 def safe_decode(value: bytes | str) -> str:
@@ -68,41 +65,16 @@ def imap_status_ok(status: bytes | str) -> bool:
     return safe_decode(status).upper() == "OK"
 
 
-def encode_modified_utf7(value: str) -> bytes:
-    encoded_parts = []
-    buffer = []
-
-    def flush_buffer() -> None:
-        if not buffer:
-            return
-        raw = "".join(buffer).encode("utf-16be")
-        encoded = b64encode(raw).decode("ascii").rstrip("=").replace("/", ",")
-        encoded_parts.append(f"&{encoded}-")
-        buffer.clear()
-
-    for char in value:
-        ordinal = ord(char)
-        if 0x20 <= ordinal <= 0x7E:
-            flush_buffer()
-            encoded_parts.append("&-" if char == "&" else char)
-        else:
-            buffer.append(char)
-
-    flush_buffer()
-    return "".join(encoded_parts).encode("ascii")
+def mailbox_candidates() -> list[str]:
+    configured = os.getenv("MAILBOX_NAME", "").strip()
+    candidates = [configured] if configured else []
+    candidates.extend(DEFAULT_MAILBOX_CANDIDATES)
+    return list(dict.fromkeys(candidate for candidate in candidates if candidate))
 
 
-def mailbox_argument(candidate: str) -> str | bytes:
-    try:
-        candidate.encode("ascii")
-        return candidate
-    except UnicodeEncodeError:
-        return encode_modified_utf7(candidate)
-
-
-def print_available_mailboxes(mailbox: imaplib.IMAP4_SSL) -> None:
-    status, data = mailbox.list()
-    if status != "OK":
+def print_available_mailboxes(mail: imaplib.IMAP4_SSL) -> None:
+    status, data = mail.list()
+    if not imap_status_ok(status):
         print("Warning: could not list available IMAP mailboxes.")
         return
 
@@ -115,31 +87,24 @@ def print_available_mailboxes(mailbox: imaplib.IMAP4_SSL) -> None:
         print("Warning: IMAP mailbox list was empty.")
 
 
-def select_mailbox(mailbox: imaplib.IMAP4_SSL, mailbox_candidates: list[str]) -> str | None:
-    for candidate in mailbox_candidates:
-        for readonly in (False, True):
-            try:
-                status, _data = mailbox.select(mailbox_argument(candidate), readonly=readonly)
-            except imaplib.IMAP4.error:
-                continue
+def select_mailbox(mail: imaplib.IMAP4_SSL) -> bool:
+    candidates = mailbox_candidates()
+    for candidate in candidates:
+        try:
+            status, _data = mail.select(candidate)
+        except (imaplib.IMAP4.error, UnicodeEncodeError):
+            continue
 
-            state = getattr(mailbox, "state", "")
-            if imap_status_ok(status) and state == "SELECTED":
-                print(f"Selected IMAP mailbox '{candidate}'.")
-                return candidate
-
-            if imap_status_ok(status):
-                print(
-                    "Warning: IMAP mailbox select returned OK for "
-                    f"'{candidate}' but connection state is '{state}', not SELECTED."
-                )
+        if imap_status_ok(status):
+            print(f"Selected mailbox: {candidate}")
+            return True
 
     print(
         "Warning: could not select any IMAP mailbox from candidates: "
-        + ", ".join(mailbox_candidates)
+        + ", ".join(candidates)
     )
-    print_available_mailboxes(mailbox)
-    return None
+    print_available_mailboxes(mail)
+    return False
 
 
 def decode_subject(value: str | None) -> str:
@@ -339,29 +304,27 @@ def collect_email_alert_jobs() -> list[dict[str, str]]:
     if settings is None:
         return []
 
-    host, port, mailbox_candidates, username, password = settings
+    host, port, username, password = settings
     since = (datetime.now() - timedelta(days=RECENT_DAYS)).strftime("%d-%b-%Y")
     collected = []
 
     try:
-        with imaplib.IMAP4_SSL(host, port) as mailbox:
-            mailbox.login(username, password)
-            selected_mailbox = select_mailbox(mailbox, mailbox_candidates)
-            if not selected_mailbox:
-                return []
-            if getattr(mailbox, "state", "") != "SELECTED":
-                print("Warning: IMAP mailbox is not selected; skipping email alert collection.")
+        with imaplib.IMAP4_SSL(host, port) as mail:
+            mail.login(username, password)
+            if not select_mailbox(mail):
+                print("Warning: no IMAP mailbox selected; skipping email alert collection.")
                 return []
 
-            status, data = mailbox.search(None, f'(SINCE "{since}")')
-            if status != "OK":
+            print("Mailbox selected; now searching recent LinkedIn alert emails")
+            status, data = mail.search(None, f'(SINCE "{since}")')
+            if not imap_status_ok(status):
                 print("Warning: IMAP search failed; skipping email alert collection.")
                 return []
 
             message_ids = data[0].split()
             for message_id in message_ids:
-                status, fetched = mailbox.fetch(message_id, "(RFC822)")
-                if status != "OK" or not fetched:
+                status, fetched = mail.fetch(message_id, "(RFC822)")
+                if not imap_status_ok(status) or not fetched:
                     continue
 
                 raw_message = fetched[0][1]
