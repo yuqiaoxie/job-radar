@@ -24,6 +24,7 @@ job-radar/
   job_radar/
     __init__.py
     collect.py          # Collect likely job links from public pages
+    email_alert_collect.py # Collect LinkedIn job links from existing email alerts
     export.py           # Export scored jobs to Excel
     notion_export.py    # Optionally export filtered jobs to Notion
     pipeline.py         # Run collect, score, and export together
@@ -78,6 +79,8 @@ This creates:
 
 If Notion environment variables are configured, the pipeline also exports the same filtered jobs to Notion after creating the Excel file.
 
+If mail environment variables are configured, the pipeline also reads recent LinkedIn job alert emails from your mailbox and merges those email jobs with public job-board results before scoring. LinkedIn pages are not opened or scraped; job-radar only parses links and text already present inside your existing emails.
+
 ## Run Individual Steps
 
 Collect links:
@@ -102,6 +105,12 @@ Export filtered jobs to Notion:
 
 ```powershell
 python -m job_radar.notion_export
+```
+
+Collect LinkedIn job alert emails:
+
+```powershell
+python -m job_radar.email_alert_collect
 ```
 
 ## Excel Columns
@@ -152,6 +161,30 @@ The Notion database should include these properties:
 - `Matched Keywords`
 
 `Job Title` should be a title property. `Score` should be a number, `URL` should ideally be a URL property, and `Date Found` should ideally be a date property. `Status` can be a Status, Select, or text-style property. If `NOTION_TOKEN` or `NOTION_DATABASE_ID` is missing, job-radar prints a warning and skips Notion export instead of crashing.
+
+## LinkedIn Email Alerts
+
+job-radar can read LinkedIn job alert emails from a 163.com mailbox using IMAP over SSL. It does not scrape LinkedIn directly and does not visit LinkedIn job pages. It only parses job titles, companies, locations, and links that already exist in your mailbox.
+
+For 163 mail, enable IMAP/SMTP in your 163 mailbox settings and create an authorization code. Use that authorization code as `MAIL_PASSWORD`; do not use your normal email login password.
+
+Local PowerShell setup:
+
+```powershell
+$env:MAIL_IMAP_HOST="imap.163.com"
+$env:MAIL_IMAP_PORT="993"
+$env:MAIL_USERNAME="your_email@163.com"
+$env:MAIL_PASSWORD="your_163_authorization_code"
+```
+
+On GitHub Actions, add these repository secrets:
+
+- `MAIL_IMAP_HOST` optional; defaults to `imap.163.com`
+- `MAIL_IMAP_PORT` optional; defaults to `993`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+
+The daily workflow already passes these secrets to the pipeline. If `MAIL_USERNAME` or `MAIL_PASSWORD` is missing, job-radar prints a warning and skips email alert collection instead of crashing.
 
 ## Notes
 
