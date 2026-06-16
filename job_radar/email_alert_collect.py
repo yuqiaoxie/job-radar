@@ -22,6 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_NAME = "LinkedIn Job Alert Email"
 SUBJECT_KEYWORDS = ("linkedin", "job alert", "jobs", "internship", "intern")
 RECENT_DAYS = 7
+DEFAULT_MAILBOX_CANDIDATES = ["INBOX", "Inbox", "\u6536\u4ef6\u7bb1"]
 
 GENERIC_LINK_TEXT = {
     "apply",
@@ -40,7 +41,7 @@ def mail_settings() -> tuple[str, int, list[str], str, str] | None:
     host = os.getenv("MAIL_IMAP_HOST", "imap.163.com").strip()
     port_text = os.getenv("MAIL_IMAP_PORT", "993").strip()
     mailbox_name = os.getenv("MAILBOX_NAME", "").strip()
-    mailbox_candidates = [mailbox_name] if mailbox_name else ["INBOX", "Inbox", "收件箱"]
+    mailbox_candidates = [mailbox_name] if mailbox_name else DEFAULT_MAILBOX_CANDIDATES
     username = os.getenv("MAIL_USERNAME", "").strip()
     password = os.getenv("MAIL_PASSWORD", "").strip()
 
@@ -61,6 +62,10 @@ def safe_decode(value: bytes | str) -> str:
     if isinstance(value, bytes):
         return value.decode("utf-8", errors="replace")
     return str(value)
+
+
+def imap_status_ok(status: bytes | str) -> bool:
+    return safe_decode(status).upper() == "OK"
 
 
 def encode_modified_utf7(value: str) -> bytes:
@@ -112,13 +117,22 @@ def print_available_mailboxes(mailbox: imaplib.IMAP4_SSL) -> None:
 
 def select_mailbox(mailbox: imaplib.IMAP4_SSL, mailbox_candidates: list[str]) -> str | None:
     for candidate in mailbox_candidates:
-        try:
-            status, _data = mailbox.select(mailbox_argument(candidate))
-        except imaplib.IMAP4.error:
-            continue
+        for readonly in (False, True):
+            try:
+                status, _data = mailbox.select(mailbox_argument(candidate), readonly=readonly)
+            except imaplib.IMAP4.error:
+                continue
 
-        if status == "OK":
-            return candidate
+            state = getattr(mailbox, "state", "")
+            if imap_status_ok(status) and state == "SELECTED":
+                print(f"Selected IMAP mailbox '{candidate}'.")
+                return candidate
+
+            if imap_status_ok(status):
+                print(
+                    "Warning: IMAP mailbox select returned OK for "
+                    f"'{candidate}' but connection state is '{state}', not SELECTED."
+                )
 
     print(
         "Warning: could not select any IMAP mailbox from candidates: "
@@ -334,6 +348,9 @@ def collect_email_alert_jobs() -> list[dict[str, str]]:
             mailbox.login(username, password)
             selected_mailbox = select_mailbox(mailbox, mailbox_candidates)
             if not selected_mailbox:
+                return []
+            if getattr(mailbox, "state", "") != "SELECTED":
+                print("Warning: IMAP mailbox is not selected; skipping email alert collection.")
                 return []
 
             status, data = mailbox.search(None, f'(SINCE "{since}")')
