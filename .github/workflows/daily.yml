@@ -30,3 +30,10 @@ jobs:
           name: daily-jobs
           path: daily_jobs.xlsx
           if-no-files-found: error
+
+      - name: Upload scored jobs audit CSV
+        uses: actions/upload-artifact@v4
+        with:
+          name: jobs-scored
+          path: data/jobs_scored.csv
+          if-no-files-found: error
