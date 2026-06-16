@@ -25,6 +25,7 @@ job-radar/
     __init__.py
     collect.py          # Collect likely job links from public pages
     export.py           # Export scored jobs to Excel
+    notion_export.py    # Optionally export filtered jobs to Notion
     pipeline.py         # Run collect, score, and export together
     score.py            # Rank jobs against your profile
   requirements.txt
@@ -75,6 +76,8 @@ This creates:
 
 `data/jobs_collected.csv` contains all collected jobs. `data/jobs_scored.csv` keeps all scored jobs and adds `hard_filter_status`, `hard_filter_reason`, `hard_filter_category`, and `minimum_score_to_export`. `daily_jobs.xlsx` only includes rows where `hard_filter_status` is `keep` and `score` is greater than `minimum_score_to_export`.
 
+If Notion environment variables are configured, the pipeline also exports the same filtered jobs to Notion after creating the Excel file.
+
 ## Run Individual Steps
 
 Collect links:
@@ -93,6 +96,12 @@ Export Excel:
 
 ```powershell
 python -m job_radar.export
+```
+
+Export filtered jobs to Notion:
+
+```powershell
+python -m job_radar.notion_export
 ```
 
 ## Excel Columns
@@ -117,6 +126,32 @@ Before export, job-radar applies a hard filter for early-career suitability. A j
 All `warning_keywords` and all nested `negative_keywords` in `config/profile.yaml` are hard exclusion filters. This includes mismatch categories such as `role_mismatch` and `contract_mismatch`. If a job matches any exclusion keyword, it is excluded from `daily_jobs.xlsx` even when its score is high.
 
 The Excel report also applies a score threshold. By default, only jobs with `score > 60` are exported. You can change this with `minimum_score_to_export` in `config/profile.yaml`.
+
+## Notion Export
+
+To export filtered jobs to Notion, create a Notion internal integration, share your job database with that integration, and set these environment variables:
+
+```powershell
+$env:NOTION_TOKEN="your_notion_integration_secret"
+$env:NOTION_DATABASE_ID="your_database_id"
+```
+
+On GitHub Actions, add the same values as repository secrets named `NOTION_TOKEN` and `NOTION_DATABASE_ID`.
+
+The Notion database should include these properties:
+
+- `Job Title`
+- `Company`
+- `Location`
+- `Source`
+- `Score`
+- `URL`
+- `Date Found`
+- `Status`
+- `Short Reason`
+- `Matched Keywords`
+
+`Job Title` should be a title property. `Score` should be a number, `URL` should ideally be a URL property, and `Date Found` should ideally be a date property. `Status` can be a Status, Select, or text-style property. If `NOTION_TOKEN` or `NOTION_DATABASE_ID` is missing, job-radar prints a warning and skips Notion export instead of crashing.
 
 ## Notes
 
